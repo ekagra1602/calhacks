@@ -34,9 +34,19 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
 
 
 
-  const handleGenerate = async () => {
-    if (!prompt.trim() && !image) return;
+  const handleGenerate = async (e?: React.MouseEvent) => {
+    e?.preventDefault(); // Prevent any form submission
+    
+    console.log('🎬 Generate button clicked');
+    console.log('Prompt:', prompt);
+    console.log('Image:', image);
+    
+    if (!prompt.trim() && !image) {
+      console.log('❌ No prompt or image provided');
+      return;
+    }
 
+    console.log('✅ Starting video generation...');
     setIsGenerating(true);
     setCurrentStep(2);
     setGenerationProgress(0);
@@ -62,13 +72,21 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
         formData.append('image', image);
       }
 
+      console.log('📡 Making API call to /api/generate-video');
       const response = await fetch('/api/generate-video', {
         method: 'POST',
         body: formData,
         signal: AbortSignal.timeout(300000)
       });
 
+      console.log('📡 Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log('📡 API Response:', result);
       
       if (result.success) {
         setVideoUrl(result.videoUrl);
@@ -84,10 +102,11 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
         ]);
         onVideoGenerated?.(result.videoUrl);
       } else {
-        throw new Error(result.error);
+        throw new Error(result.error || 'Unknown error occurred');
       }
     } catch (error) {
-      console.error('Error generating video:', error);
+      console.error('❌ Error generating video:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setCurrentStep(1);
     } finally {
       setIsGenerating(false);
