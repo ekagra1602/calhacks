@@ -1,4 +1,4 @@
-# EpicVideo3D
+# LiveIt
 
 A React web application for generating cinematic videos using the Veo 3 API and proceeding to 3D rendering.
 
