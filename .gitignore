@@ -34,4 +34,12 @@ yarn-error.log*
 *.swo
 
 # OS
-Thumbs.db three-gltf-viewer/
+Thumbs.db
+three-gltf-viewer/
+
+# Video2GLB specific
+data/
+exports/
+outputs/
+videos/
+.lightning_studio/
