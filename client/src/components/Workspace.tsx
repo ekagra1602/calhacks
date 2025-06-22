@@ -64,6 +64,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
       const response = await fetch('http://localhost:5000/api/generate-video', {
         method: 'POST',
         body: formData,
+        signal: AbortSignal.timeout(300000)
       });
 
       const result = await response.json();

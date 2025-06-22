@@ -10,10 +10,18 @@
     "build": "cd client && npm run build",
     "start": "cd server && npm start"
   },
-  "keywords": ["react", "veo3", "video", "3d"],
+  "keywords": [
+    "react",
+    "veo3",
+    "video",
+    "3d"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
   }
-} 
+}
