@@ -25,6 +25,14 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Demo mode for hackathon presentation
+  const [isDemoMode, setIsDemoMode] = useState(true); // Set to true for demo
+  const [isGenerating3D, setIsGenerating3D] = useState(false);
+
+  // Demo file paths (you'll need to add these files to public folder)
+  const DEMO_GLB_URL = '/demo-model.glb';
+  const DEMO_VIDEO_URL = '/demo-video.mp4';
+
   const [templates] = useState([
     { id: 1, name: 'Cinematic Landscape', preview: '🏔️', description: 'Epic mountain scenery with dramatic lighting' },
     { id: 2, name: 'Urban Night', preview: '🌃', description: 'City lights and neon reflections' },
@@ -34,14 +42,13 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
     { id: 6, name: 'Desert Sunset', preview: '🏜️', description: 'Golden hour in vast desert' }
   ]);
 
-
-
   const handleGenerate = async (e?: React.MouseEvent) => {
     e?.preventDefault(); // Prevent any form submission
     
     console.log('🎬 Generate button clicked');
     console.log('Prompt:', prompt);
     console.log('Image:', image);
+    console.log('Demo Mode:', isDemoMode);
     
     if (!prompt.trim() && !image) {
       console.log('❌ No prompt or image provided');
@@ -52,70 +59,78 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
     setIsGenerating(true);
     setCurrentStep(2);
     setGenerationProgress(0);
-    setEstimatedTime(45);
-
-    // Simulate progress
-    const progressInterval = setInterval(() => {
-      setGenerationProgress(prev => {
-        const newProgress = prev + Math.random() * 15;
-        if (newProgress >= 100) {
-          clearInterval(progressInterval);
-          setCurrentStep(4);
-          return 100;
-        }
-        return newProgress;
-      });
-    }, 1000);
+    setEstimatedTime(isDemoMode ? 10 : 45);
 
     try {
-      const formData = new FormData();
-      formData.append('prompt', prompt);
-      if (image) {
-        formData.append('image', image);
-      }
+      if (isDemoMode) {
+        // Demo mode: simulate everything locally
+        await simulateVideoGeneration();
+        onVideoGenerated?.(DEMO_VIDEO_URL);
+      } else {
+        // Real API mode
+        const progressInterval = setInterval(() => {
+          setGenerationProgress(prev => {
+            const newProgress = prev + Math.random() * 15;
+            if (newProgress >= 100) {
+              clearInterval(progressInterval);
+              setCurrentStep(4);
+              return 100;
+            }
+            return newProgress;
+          });
+        }, 1000);
 
-      console.log('📡 Making API call to /api/generate-video');
-      const response = await fetch('/api/generate-video', {
-        method: 'POST',
-        body: formData,
-        signal: AbortSignal.timeout(300000)
-      });
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        if (image) {
+          formData.append('image', image);
+        }
 
-      console.log('📡 Response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        console.log('📡 Making API call to /api/generate-video');
+        const response = await fetch('/api/generate-video', {
+          method: 'POST',
+          body: formData,
+          signal: AbortSignal.timeout(300000)
+        });
 
-      const result = await response.json();
-      console.log('📡 API Response:', result);
-      
-      if (result.success) {
-        setVideoUrl(result.videoUrl);
-        setCurrentStep(5);
+        console.log('📡 Response status:', response.status);
         
-        // Handle 3D model if available
-        if (result.glbUrl) {
-          setGlbUrl(result.glbUrl);
-          setHas3D(true);
-          console.log('✅ GLB file received:', result.glbUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('📡 API Response:', result);
+        
+        if (result.success) {
+          setVideoUrl(result.videoUrl);
+          setCurrentStep(5);
+          
+          // Real API mode - handle actual 3D conversion
+          if (result.glbUrl) {
+            setGlbUrl(result.glbUrl);
+            setHas3D(true);
+            console.log('✅ GLB file received:', result.glbUrl);
+          } else {
+            setHas3D(false);
+            console.log('⚠️ No GLB file generated:', result.error3D || 'Unknown reason');
+          }
+          
+          // Generate sample images for 3D preview
+          setGeneratedImages([
+            'https://picsum.photos/400/400?random=1',
+            'https://picsum.photos/400/400?random=2',
+            'https://picsum.photos/400/400?random=3',
+            'https://picsum.photos/400/400?random=4',
+            'https://picsum.photos/400/400?random=5',
+            'https://picsum.photos/400/400?random=6'
+          ]);
+          onVideoGenerated?.(result.videoUrl);
         } else {
-          setHas3D(false);
-          console.log('⚠️ No GLB file generated:', result.error3D || 'Unknown reason');
+          throw new Error(result.error || 'Unknown error occurred');
         }
         
-        // Generate sample images for 3D preview (in real implementation, these would come from the API)
-        setGeneratedImages([
-          'https://picsum.photos/400/400?random=1',
-          'https://picsum.photos/400/400?random=2',
-          'https://picsum.photos/400/400?random=3',
-          'https://picsum.photos/400/400?random=4',
-          'https://picsum.photos/400/400?random=5',
-          'https://picsum.photos/400/400?random=6'
-        ]);
-        onVideoGenerated?.(result.videoUrl);
-      } else {
-        throw new Error(result.error || 'Unknown error occurred');
+        clearInterval(progressInterval);
       }
     } catch (error) {
       console.error('❌ Error generating video:', error);
@@ -123,7 +138,6 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
       setCurrentStep(1);
     } finally {
       setIsGenerating(false);
-      clearInterval(progressInterval);
     }
   };
 
@@ -135,7 +149,62 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
     setPrompt(template.description);
   };
 
+  const simulateVideoGeneration = async () => {
+    console.log('🎭 Demo mode: Simulating video generation...');
+    
+    // Simulate realistic video generation time (8-12 seconds)
+    const totalTime = 8000 + Math.random() * 4000;
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => {
+        const increment = (100 / totalTime) * 500; // Update every 500ms
+        const newProgress = prev + increment;
+        if (newProgress >= 100) {
+          clearInterval(progressInterval);
+          setCurrentStep(4);
+          return 100;
+        }
+        return newProgress;
+      });
+    }, 500);
+    
+    await new Promise(resolve => setTimeout(resolve, totalTime));
+    
+    // Load demo video
+    setVideoUrl(DEMO_VIDEO_URL);
+    setCurrentStep(5);
+    setHas3D(false); // Will be set to true when user clicks "Generate 3D Model"
+    
+    // Generate sample images for 3D preview
+    setGeneratedImages([
+      'https://picsum.photos/400/400?random=1',
+      'https://picsum.photos/400/400?random=2',
+      'https://picsum.photos/400/400?random=3',
+      'https://picsum.photos/400/400?random=4',
+      'https://picsum.photos/400/400?random=5',
+      'https://picsum.photos/400/400?random=6'
+    ]);
+    
+    console.log('✅ Demo video loaded:', DEMO_VIDEO_URL);
+    clearInterval(progressInterval);
+  };
 
+  const simulateGLBGeneration = async () => {
+    setIsGenerating3D(true);
+    setHas3D(false);
+    
+    // Simulate 3D generation progress
+    console.log('🎲 Simulating 3D model generation...');
+    
+    // Simulate realistic processing time (3-5 seconds)
+    await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
+    
+    // Set the demo GLB file
+    setGlbUrl(DEMO_GLB_URL);
+    setHas3D(true);
+    setIsGenerating3D(false);
+    
+    console.log('✅ Demo GLB file loaded:', DEMO_GLB_URL);
+  };
 
   const renderGenerateTab = () => (
     <div className="workspace-grid">
@@ -194,11 +263,33 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
               </button>
 
               {videoUrl && (
-                <button className="proceed-btn" onClick={handleProceedTo3D}>
-                  <span className="btn-icon">{has3D ? '🎲' : '🚀'}</span>
-                  {has3D ? 'View 3D Model' : 'View in 3D'}
-                  {has3D && <span className="status-badge">✓</span>}
-                </button>
+                <>
+                  {isDemoMode && !has3D ? (
+                    <button 
+                      className="proceed-btn generate-3d-btn" 
+                      onClick={simulateGLBGeneration}
+                      disabled={isGenerating3D}
+                    >
+                      {isGenerating3D ? (
+                        <>
+                          <span className="btn-spinner"></span>
+                          Generating 3D...
+                        </>
+                      ) : (
+                        <>
+                          <span className="btn-icon">🎲</span>
+                          Generate 3D Model
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button className="proceed-btn" onClick={handleProceedTo3D}>
+                      <span className="btn-icon">{has3D ? '🎲' : '🚀'}</span>
+                      {has3D ? 'View 3D Model' : 'View in 3D'}
+                      {has3D && <span className="status-badge">✓</span>}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -210,6 +301,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
                 progress={generationProgress}
                 isGenerating={isGenerating}
                 estimatedTime={estimatedTime}
+                isDemoMode={isDemoMode}
               />
             </div>
           )}
@@ -395,8 +487,26 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
         <div className="workspace-title">
           <h1>Video Generation Studio</h1>
           <p>Transform your ideas into cinematic 3D experiences</p>
+          {isDemoMode && (
+            <div className="demo-badge">
+              <span className="demo-icon">🎭</span>
+              <span>Demo Mode Active</span>
+            </div>
+          )}
         </div>
         <div className="workspace-actions">
+          <div className="demo-mode-toggle">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={isDemoMode}
+                onChange={(e) => setIsDemoMode(e.target.checked)}
+                className="toggle-input"
+              />
+              <span className="toggle-slider"></span>
+              <span className="toggle-text">Demo Mode</span>
+            </label>
+          </div>
           <button className="action-btn secondary">
             <span className="btn-icon">💾</span>
             Save Project

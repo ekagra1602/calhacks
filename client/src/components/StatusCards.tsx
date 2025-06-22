@@ -17,6 +17,7 @@ interface StatusCardsProps {
   currentStep?: number;
   progress?: number;
   estimatedTime?: number;
+  isDemoMode?: boolean;
 }
 
 const StatusCards: React.FC<StatusCardsProps> = ({ 
@@ -24,7 +25,8 @@ const StatusCards: React.FC<StatusCardsProps> = ({
   hasVideo = false,
   currentStep = 1,
   progress = 0,
-  estimatedTime = 0
+  estimatedTime = 0,
+  isDemoMode = false
 }) => {
   const [animationTrigger, setAnimationTrigger] = useState(0);
 
@@ -48,11 +50,11 @@ const StatusCards: React.FC<StatusCardsProps> = ({
     {
       id: 'status',
       title: 'Status',
-      value: isGenerating ? 'Generating' : hasVideo ? 'Ready' : 'Waiting',
-      subtitle: isGenerating ? 'AI at work...' : hasVideo ? 'Video created' : 'Ready to start',
-      icon: isGenerating ? '⚡' : hasVideo ? '✅' : '⏸️',
+      value: isGenerating ? (isDemoMode ? 'Demo Mode' : 'Generating') : hasVideo ? 'Ready' : 'Waiting',
+      subtitle: isGenerating ? (isDemoMode ? 'Simulating...' : 'AI at work...') : hasVideo ? 'Video created' : 'Ready to start',
+      icon: isGenerating ? (isDemoMode ? '🎭' : '⚡') : hasVideo ? '✅' : '⏸️',
       trend: 'neutral',
-      color: isGenerating ? '#4a4a4a' : hasVideo ? '#2a4a2a' : '#4a2a2a'
+      color: isGenerating ? (isDemoMode ? '#4a4a2a' : '#4a4a4a') : hasVideo ? '#2a4a2a' : '#4a2a2a'
     },
     {
       id: 'quality',
