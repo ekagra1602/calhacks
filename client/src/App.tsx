@@ -19,39 +19,6 @@ function App() {
         return <Dashboard />;
       case 'workspace':
         return <Workspace onVideoGenerated={handleVideoGenerated} />;
-      case 'projects':
-        return (
-          <div className="view-placeholder">
-            <div className="placeholder-content">
-              <h2>📁 Projects</h2>
-              <p>Manage and organize your video projects</p>
-              <div className="placeholder-icon">🚧</div>
-              <p className="placeholder-text">Coming Soon</p>
-            </div>
-          </div>
-        );
-      case 'templates':
-        return (
-          <div className="view-placeholder">
-            <div className="placeholder-content">
-              <h2>🎨 Templates</h2>
-              <p>Browse and use pre-made video templates</p>
-              <div className="placeholder-icon">🚧</div>
-              <p className="placeholder-text">Coming Soon</p>
-            </div>
-          </div>
-        );
-      case 'analytics':
-        return (
-          <div className="view-placeholder">
-            <div className="placeholder-content">
-              <h2>📈 Analytics</h2>
-              <p>View detailed analytics and insights</p>
-              <div className="placeholder-icon">🚧</div>
-              <p className="placeholder-text">Coming Soon</p>
-            </div>
-          </div>
-        );
       case 'settings':
         return (
           <div className="view-placeholder">

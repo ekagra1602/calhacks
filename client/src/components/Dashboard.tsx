@@ -53,10 +53,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="header-content">
           <h2>Dashboard Overview</h2>
           <div className="header-actions">
-            <button className="action-button primary">
-              <span className="icon">📊</span>
-              <span>Analytics</span>
-            </button>
             <button className="action-button secondary">
               <span className="icon">⚙️</span>
               <span>Settings</span>
@@ -65,8 +61,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
         <div className="dashboard-nav">
           <button className="nav-tab active">Overview</button>
-          <button className="nav-tab">Projects</button>
-          <button className="nav-tab">Analytics</button>
           <button className="nav-tab">Settings</button>
         </div>
       </div>
@@ -230,11 +224,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <span className="action-icon">📥</span>
                 <span className="action-text">Import</span>
                 <span className="action-desc">Upload files</span>
-              </button>
-              <button className="quick-action template">
-                <span className="action-icon">🎨</span>
-                <span className="action-text">Templates</span>
-                <span className="action-desc">Browse library</span>
               </button>
               <button className="quick-action export">
                 <span className="action-icon">📤</span>

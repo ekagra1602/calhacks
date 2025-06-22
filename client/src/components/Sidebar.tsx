@@ -10,11 +10,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentStep = 1 }) => {
 
   const menuItems = [
     { id: 'dashboard', icon: '🏠', label: 'Dashboard', active: true },
-    { id: 'projects', icon: '📁', label: 'Projects', badge: '3' },
-    { id: 'templates', icon: '🎨', label: 'Templates' },
-    { id: 'gallery', icon: '🖼️', label: 'Gallery' },
-    { id: 'settings', icon: '⚙️', label: 'Settings' },
-    { id: 'help', icon: '❓', label: 'Help & Support' }
+    { id: 'settings', icon: '⚙️', label: 'Settings' }
   ];
 
   const quickActions = [
@@ -48,7 +44,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentStep = 1 }) => {
                   {!isCollapsed && (
                     <>
                       <span className="nav-label">{item.label}</span>
-                      {item.badge && <span className="nav-badge">{item.badge}</span>}
                     </>
                   )}
                 </a>

@@ -10,16 +10,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentView, onViewChange }) =>
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [notifications] = useState([
     { id: 1, title: 'Video Generation Complete', message: 'Mountain Vista is ready', time: '2m ago', type: 'success' },
-    { id: 2, title: 'New Template Available', message: 'Space Journey template added', time: '1h ago', type: 'info' },
     { id: 3, title: 'Storage Warning', message: '80% of storage used', time: '3h ago', type: 'warning' }
   ]);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊', badge: null },
     { id: 'workspace', label: 'Workspace', icon: '🎬', badge: null },
-    { id: 'projects', label: 'Projects', icon: '📁', badge: '12' },
-    { id: 'templates', label: 'Templates', icon: '🎨', badge: null },
-    { id: 'analytics', label: 'Analytics', icon: '📈', badge: null },
     { id: 'settings', label: 'Settings', icon: '⚙️', badge: null }
   ];
 

@@ -10,6 +10,8 @@
     "@types/node": "^16.11.56",
     "@types/react": "^18.0.17",
     "@types/react-dom": "^18.0.6",
+    "framer-motion": "^12.18.1",
+    "lucide-react": "^0.522.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -41,4 +43,4 @@
     ]
   },
   "proxy": "http://localhost:5000"
-} 
+}

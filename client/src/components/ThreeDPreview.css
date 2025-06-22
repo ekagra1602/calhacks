@@ -1,0 +1,446 @@
+.threed-preview-container {
+  background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+  border: 1px solid #333;
+  border-radius: 16px;
+  padding: 20px;
+  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.threed-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #333;
+}
+
+.threed-preview-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.header-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.threed-viewport {
+  position: relative;
+  height: 400px;
+  background: linear-gradient(45deg, #111, #222);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.carousel-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+}
+
+.carousel-container:active {
+  cursor: grabbing;
+}
+
+.carousel-cylinder {
+  position: relative;
+  height: 200px;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.carousel-face {
+  position: absolute;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+.carousel-face:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.carousel-face.active {
+  border-color: #4ade80;
+  box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+}
+
+.carousel-face.wireframe {
+  background: transparent;
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+.carousel-face.wireframe .face-image {
+  opacity: 0.3;
+  filter: grayscale(100%);
+}
+
+.face-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.face-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.viewport-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.zoom-indicator {
+  font-size: 14px;
+  font-weight: 500;
+  color: #ccc;
+  min-width: 50px;
+  text-align: center;
+}
+
+.rotation-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 120px;
+}
+
+.rotation-controls .control-btn:nth-child(1) {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.rotation-controls .control-btn:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.rotation-controls .control-btn:nth-child(3) {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.rotation-controls .control-btn:nth-child(4) {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.reset-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  transform: scale(1.05);
+}
+
+.threed-info {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  color: #888;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #fff;
+  font-weight: 600;
+}
+
+.threed-preview-hidden {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  border: 2px dashed #444;
+  border-radius: 16px;
+}
+
+.visibility-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.visibility-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Fullscreen Modal */
+.fullscreen-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.fullscreen-content {
+  width: 95vw;
+  height: 95vh;
+  max-width: 1400px;
+  background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+  border: 1px solid #333;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #333;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.fullscreen-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-fullscreen:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.fullscreen-viewport {
+  flex: 1;
+  position: relative;
+  background: linear-gradient(45deg, #111, #222);
+}
+
+.fullscreen-carousel {
+  height: 100%;
+}
+
+.fullscreen-face {
+  height: 300px;
+}
+
+.fullscreen-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #333;
+}
+
+.fullscreen-controls .zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fullscreen-controls .zoom-controls button {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fullscreen-controls .zoom-controls span {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .threed-preview-container {
+    padding: 16px;
+  }
+  
+  .threed-viewport {
+    height: 300px;
+  }
+  
+  .carousel-cylinder {
+    height: 150px;
+  }
+  
+  .carousel-face {
+    height: 150px;
+  }
+  
+  .viewport-controls {
+    flex-direction: column;
+    gap: 12px;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+  }
+  
+  .rotation-controls {
+    width: 100px;
+  }
+  
+  .threed-info {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .fullscreen-content {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .fullscreen-controls {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-controls {
+    gap: 4px;
+  }
+  
+  .control-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .zoom-controls {
+    gap: 8px;
+  }
+  
+  .rotation-controls {
+    display: none;
+  }
+  
+  .viewport-controls {
+    padding: 8px;
+  }
+} 
