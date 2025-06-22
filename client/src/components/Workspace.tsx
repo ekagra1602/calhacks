@@ -31,11 +31,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
     { id: 6, name: 'Desert Sunset', preview: '🏜️', description: 'Golden hour in vast desert' }
   ]);
 
-  const [recentProjects] = useState([
-    { id: 1, name: 'Mountain Vista', thumbnail: '🏔️', duration: '8s', status: 'completed', date: '2 hours ago' },
-    { id: 2, name: 'City Lights', thumbnail: '🌃', duration: '8s', status: 'processing', date: '4 hours ago' },
-    { id: 3, name: 'Ocean Dreams', thumbnail: '🌊', duration: '8s', status: 'completed', date: '1 day ago' }
-  ]);
+
 
   const handleGenerate = async () => {
     if (!prompt.trim() && !image) return;
@@ -105,10 +101,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
     setPrompt(template.description);
   };
 
-  const handleRecentProjectSelect = (project: any) => {
-    console.log('Loading project:', project.name);
-    // Implement project loading logic
-  };
+
 
   const renderGenerateTab = () => (
     <div className="workspace-grid">
@@ -252,85 +245,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
         </div>
       </div>
 
-      {/* Recent Projects */}
-      <div className="projects-section">
-        <div className="projects-card">
-          <div className="projects-header">
-            <h3>Recent Projects</h3>
-            <button className="view-all-btn">View All</button>
-          </div>
-          <div className="projects-list">
-            {recentProjects.map((project) => (
-              <div 
-                key={project.id} 
-                className="project-item"
-                onClick={() => handleRecentProjectSelect(project)}
-              >
-                <div className="project-thumbnail">
-                  <span className="project-icon">{project.thumbnail}</span>
-                  <div className={`project-status ${project.status}`}>
-                    {project.status === 'completed' ? '✅' : '⏳'}
-                  </div>
-                </div>
-                <div className="project-details">
-                  <div className="project-name">{project.name}</div>
-                  <div className="project-meta">
-                    <span className="project-duration">{project.duration}</span>
-                    <span className="project-date">{project.date}</span>
-                  </div>
-                </div>
-                <div className="project-actions">
-                  <button className="project-action">
-                    <span>▶️</span>
-                  </button>
-                  <button className="project-action">
-                    <span>📥</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="stats-section">
-        <div className="stats-card">
-          <div className="stats-header">
-            <h3>Quick Stats</h3>
-          </div>
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-icon">🎬</div>
-              <div className="stat-content">
-                <div className="stat-value">12</div>
-                <div className="stat-label">Videos Created</div>
-              </div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-icon">⏱️</div>
-              <div className="stat-content">
-                <div className="stat-value">96s</div>
-                <div className="stat-label">Total Duration</div>
-              </div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-icon">💾</div>
-              <div className="stat-content">
-                <div className="stat-value">28MB</div>
-                <div className="stat-label">Storage Used</div>
-              </div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-icon">🚀</div>
-              <div className="stat-content">
-                <div className="stat-value">4.2s</div>
-                <div className="stat-label">Avg Render</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
     </div>
   );
 
