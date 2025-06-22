@@ -15,12 +15,16 @@ interface StatusCardsProps {
   isGenerating?: boolean;
   hasVideo?: boolean;
   currentStep?: number;
+  progress?: number;
+  estimatedTime?: number;
 }
 
 const StatusCards: React.FC<StatusCardsProps> = ({ 
   isGenerating = false, 
   hasVideo = false,
-  currentStep = 1 
+  currentStep = 1,
+  progress = 0,
+  estimatedTime = 0
 }) => {
   const [animationTrigger, setAnimationTrigger] = useState(0);
 
@@ -35,7 +39,7 @@ const StatusCards: React.FC<StatusCardsProps> = ({
     {
       id: 'progress',
       title: 'Progress',
-      value: `${Math.round((currentStep / 5) * 100)}%`,
+      value: `${Math.round(progress || (currentStep / 5) * 100)}%`,
       subtitle: `Step ${currentStep} of 5`,
       icon: '📊',
       trend: currentStep > 1 ? 'up' : 'neutral',
@@ -62,7 +66,7 @@ const StatusCards: React.FC<StatusCardsProps> = ({
     {
       id: 'time',
       title: 'Est. Time',
-      value: isGenerating ? '45s' : hasVideo ? 'Done' : '--',
+      value: isGenerating ? `${estimatedTime || 45}s` : hasVideo ? 'Done' : '--',
       subtitle: isGenerating ? 'Processing' : hasVideo ? 'Completed' : 'Not started',
       icon: '⏱️',
       trend: 'neutral',

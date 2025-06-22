@@ -2,11 +2,14 @@ import React, { useState, useRef, useCallback } from 'react';
 import './ImageUpload.css';
 
 interface ImageUploadProps {
-  uploadedImage: File | null;
-  imagePreview: string;
-  onImageUpload: (file: File) => void;
-  onImageRemove: () => void;
+  uploadedImage?: File | null;
+  imagePreview?: string;
+  onImageUpload?: (file: File) => void;
+  onImageRemove?: () => void;
   disabled?: boolean;
+  // New props for compatibility
+  onImageSelect?: (file: File | null) => void;
+  selectedImage?: File | null;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -14,8 +17,21 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   imagePreview,
   onImageUpload,
   onImageRemove,
-  disabled = false
+  disabled = false,
+  onImageSelect,
+  selectedImage
 }) => {
+  // Use new props if provided, fallback to old props
+  const currentImage = selectedImage || uploadedImage;
+  const currentPreview = imagePreview || (currentImage ? URL.createObjectURL(currentImage) : '');
+  const handleUpload = onImageSelect || onImageUpload;
+  const handleRemove = () => {
+    if (onImageSelect) {
+      onImageSelect(null);
+    } else if (onImageRemove) {
+      onImageRemove();
+    }
+  };
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -64,7 +80,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         if (prev >= 100) {
           clearInterval(progressInterval);
           setIsProcessing(false);
-          onImageUpload(file);
+          if (handleUpload) {
+            handleUpload(file);
+          }
           return 100;
         }
         return prev + 10;
@@ -95,7 +113,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         <span className="upload-hint">(Optional - helps guide generation)</span>
       </div>
 
-      {!imagePreview ? (
+      {!currentPreview ? (
         <div
           className={`upload-dropzone ${isDragOver ? 'drag-over' : ''} ${disabled ? 'disabled' : ''}`}
           onDragOver={handleDragOver}
@@ -146,13 +164,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       ) : (
         <div className="image-preview-container">
           <div className="image-preview">
-            <img src={imagePreview} alt="Uploaded reference" />
+            <img src={currentPreview} alt="Uploaded reference" />
             <div className="image-overlay">
               <button
                 className="remove-button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onImageRemove();
+                  handleRemove();
                 }}
                 disabled={disabled}
               >
@@ -164,12 +182,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             </div>
           </div>
           
-          {uploadedImage && (
-            <div className="image-info">
-              <div className="image-details">
-                <span className="image-name">{uploadedImage.name}</span>
-                <span className="image-size">{getFileSize(uploadedImage.size)}</span>
-              </div>
+          {currentImage && (
+                          <div className="image-info">
+                <div className="image-details">
+                  <span className="image-name">{currentImage.name}</span>
+                  <span className="image-size">{getFileSize(currentImage.size)}</span>
+                </div>
               <button
                 className="change-button"
                 onClick={handleClick}

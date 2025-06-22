@@ -5,6 +5,8 @@ interface PromptInputProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  placeholder?: string;
+  maxLength?: number;
 }
 
 const PLACEHOLDER_SUGGESTIONS = [
@@ -16,7 +18,7 @@ const PLACEHOLDER_SUGGESTIONS = [
   "A medieval castle surrounded by enchanted gardens..."
 ];
 
-const PromptInput: React.FC<PromptInputProps> = ({ value, onChange, disabled = false }) => {
+const PromptInput: React.FC<PromptInputProps> = ({ value, onChange, disabled = false, placeholder, maxLength = 500 }) => {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const [charCount, setCharCount] = useState(0);
@@ -36,7 +38,7 @@ const PromptInput: React.FC<PromptInputProps> = ({ value, onChange, disabled = f
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    if (newValue.length <= 500) {
+    if (newValue.length <= maxLength) {
       onChange(newValue);
       setIsTyping(true);
       setTimeout(() => setIsTyping(false), 1000);
@@ -56,14 +58,14 @@ const PromptInput: React.FC<PromptInputProps> = ({ value, onChange, disabled = f
           ✨ Describe your vision
         </label>
         <div className="char-counter" style={{ color: getCharCountColor() }}>
-          {charCount}/500
+          {charCount}/{maxLength}
         </div>
       </div>
       
       <div className={`textarea-wrapper ${isTyping ? 'typing' : ''} ${disabled ? 'disabled' : ''}`}>
         <textarea
           className="prompt-input"
-          placeholder={PLACEHOLDER_SUGGESTIONS[currentPlaceholder]}
+          placeholder={placeholder || PLACEHOLDER_SUGGESTIONS[currentPlaceholder]}
           value={value}
           onChange={handleChange}
           rows={4}
@@ -80,7 +82,7 @@ const PromptInput: React.FC<PromptInputProps> = ({ value, onChange, disabled = f
               key={tag}
               className="suggestion-tag"
               onClick={() => {
-                if (!disabled && value.length + tag.length + 1 <= 500) {
+                if (!disabled && value.length + tag.length + 1 <= maxLength) {
                   onChange(value + (value ? ' ' : '') + tag.toLowerCase());
                 }
               }}
