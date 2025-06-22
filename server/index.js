@@ -4,6 +4,7 @@ const axios = require('axios');
 const multer = require('multer');
 const fs = require('fs');
 require('dotenv').config();
+const { GoogleGenAI } = require('@google/generative-ai');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +31,10 @@ const upload = multer({
 
 // Generate video endpoint - now handles both text and image
 app.post('/api/generate-video', upload.single('image'), async (req, res) => {
+  // Set a longer timeout for this route
+  req.setTimeout(300000); // 5 minutes
+  res.setTimeout(300000);
+  
   try {
     const { prompt } = req.body;
     const imageFile = req.file;
@@ -38,73 +43,86 @@ app.post('/api/generate-video', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    // Prepare the request payload
-    const veoPayload = {
-      prompt: prompt,
-      duration: 8,
-      style: 'cinematic'
+    console.log('🎬 Generating video with Veo 2...');
+
+    // Prepare the generation config
+    const config = {
+      personGeneration: "dont_allow",
+      aspectRatio: "16:9",
     };
 
-    // If image is provided, we need to handle it
-    let imageData = null;
+    let operation;
+
     if (imageFile) {
-      try {
-        // Read the image file and convert to base64
-        const imageBuffer = fs.readFileSync(imageFile.path);
-        imageData = imageBuffer.toString('base64');
-        
-        // Add image to payload
-        veoPayload.image = {
-          data: imageData,
-          mime_type: imageFile.mimetype
-        };
-        
-        // Clean up uploaded file
-        fs.unlinkSync(imageFile.path);
-      } catch (imageError) {
-        console.error('Error processing image:', imageError);
-        if (imageFile.path && fs.existsSync(imageFile.path)) {
-          fs.unlinkSync(imageFile.path);
-        }
-      }
+      // Image-to-video generation
+      const imageBuffer = fs.readFileSync(imageFile.path);
+      
+      operation = await ai.models.generateVideos({
+        model: "veo-2.0-generate-001",
+        prompt: prompt,
+        image: {
+          imageBytes: imageBuffer,
+          mimeType: imageFile.mimetype,
+        },
+        config: config,
+      });
+      
+      fs.unlinkSync(imageFile.path); // Clean up
+    } else {
+      // Text-to-video generation
+      operation = await ai.models.generateVideos({
+        model: "veo-2.0-generate-001", 
+        prompt: prompt,
+        config: config,
+      });
     }
 
-    console.log('Sending request to Veo 3 API with:', {
-      prompt: prompt,
-      hasImage: !!imageData,
-      imageSize: imageData ? imageData.length : 0
-    });
+    // Add a maximum poll limit
+    let pollCount = 0;
+    const maxPolls = 20; // Max 200 seconds (20 * 10 seconds)
+    
+    while (!operation.done && pollCount < maxPolls) {
+      await new Promise(resolve => setTimeout(resolve, 10000));
+      operation = await ai.operations.getVideosOperation({ operation });
+      pollCount++;
+      
+      console.log(`Polling attempt ${pollCount}, status: ${operation.done ? 'done' : 'pending'}`);
+    }
+    
+    if (!operation.done) {
+      return res.status(408).json({
+        error: 'Video generation timeout',
+        message: 'Generation took longer than expected'
+      });
+    }
 
-    // Call Veo 3 API
-    const response = await axios.post(
-      process.env.VEO3_API_URL || 'https://api.veo3.com/v1/generate-preview',
-      veoPayload,
-      {
-        headers: {
-          'Authorization': `Bearer ${process.env.VEO3_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 120000 // 2 minute timeout for video generation
-      }
-    );
-
-    res.json({
-      success: true,
-      videoUrl: response.data.video_url,
-      jobId: response.data.job_id,
-      message: imageData ? 'Video generated with image reference' : 'Video generated from text prompt'
-    });
+    // Get the video URL
+    const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
+    
+    if (videoUri) {
+      res.json({
+        success: true,
+        videoUrl: `${videoUri}&key=${process.env.GEMINI_API_KEY}`,
+        message: imageFile ? 
+          'Video generated from image + text!' : 
+          'Video generated from text!'
+      });
+    } else {
+      throw new Error('No video generated');
+    }
 
   } catch (error) {
-    // Clean up uploaded file in case of error
+    console.error('Veo 2 API Error:', error);
+    
+    // Clean up image if it exists
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
     
-    console.error('Error generating video:', error.response?.data || error.message);
     res.status(500).json({
       error: 'Failed to generate video',
-      message: error.response?.data?.message || error.message
+      message: error.message,
+      details: error.response?.data || 'Unknown error'
     });
   }
 });
@@ -183,8 +201,8 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
+const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/api/health`);
-  console.log('Image upload support enabled');
-}); 
+  console.log(`
