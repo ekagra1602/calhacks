@@ -147,7 +147,7 @@ npm run client
 | `VEO3_API_KEY` | Veo 3 API authentication key | Required |
 | `VEO3_API_URL` | Veo 3 API endpoint | `https://api.veo3.com/v1/generate-preview` |
 
-##Deployment
+##Production Deployment
 
 1. **Build the frontend:**
    ```bash
