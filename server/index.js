@@ -205,4 +205,4 @@ const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`
+});
