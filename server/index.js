@@ -4,7 +4,7 @@ const axios = require('axios');
 const multer = require('multer');
 const fs = require('fs');
 require('dotenv').config();
-const { GoogleGenAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -201,7 +201,15 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
-const ai = new GoogleGenAI(process.env.GEMINI_API_KEY);
+// ------------------------------------------------------------------
+//  Google Generative AI (Gemini) client
+// ------------------------------------------------------------------
+if (!process.env.GEMINI_API_KEY) {
+  console.error('❌ GEMINI_API_KEY is not set in the .env file. Please add it before starting the server.');
+  process.exit(1);
+}
+
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

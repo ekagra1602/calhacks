@@ -62,7 +62,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
         formData.append('image', image);
       }
 
-      const response = await fetch('http://localhost:5000/api/generate-video', {
+      const response = await fetch('/api/generate-video', {
         method: 'POST',
         body: formData,
         signal: AbortSignal.timeout(300000)
