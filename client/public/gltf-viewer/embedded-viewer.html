@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embedded 3D Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            border: 3px solid #333;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #ccc;
+            backdrop-filter: blur(10px);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">🎲</div>
+            <div>Waiting for 3D model...</div>
+        </div>
+        
+        <div class="loading hidden" id="loading">
+            <div class="spinner"></div>
+            <div>Loading 3D model...</div>
+        </div>
+        
+        <div class="controls-hint hidden" id="controlsHint">
+            🖱️ Drag to rotate • 🔍 Scroll to zoom • ⌨️ Right-click to pan
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+        import { GLTFLoader } from 'https://unpkg.com/three@0.158.0/examples/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'https://unpkg.com/three@0.158.0/examples/jsm/controls/OrbitControls.js';
+        import { DRACOLoader } from 'https://unpkg.com/three@0.158.0/examples/jsm/loaders/DRACOLoader.js';
+
+        let scene, camera, renderer, controls;
+        let currentModel = null;
+        
+        const container = document.getElementById('container');
+        const loading = document.getElementById('loading');
+        const emptyState = document.getElementById('emptyState');
+        const controlsHint = document.getElementById('controlsHint');
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 0.1;
+            controls.maxDistance = 100;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
+            scene.add(hemisphereLight);
+
+            // Grid
+            const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+            scene.add(gridHelper);
+
+            // Animation loop
+            animate();
+
+            // Handle resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function loadModel(arrayBuffer, fileName) {
+            loading.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            // Clear previous model
+            if (currentModel) {
+                scene.remove(currentModel);
+                currentModel = null;
+            }
+
+            const loader = new GLTFLoader();
+            
+            // Setup DRACO loader if needed
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('https://unpkg.com/three@0.158.0/examples/jsm/libs/draco/');
+            loader.setDRACOLoader(dracoLoader);
+
+            // Convert ArrayBuffer to Blob URL
+            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+
+            loader.load(
+                url,
+                (gltf) => {
+                    currentModel = gltf.scene;
+                    
+                    // Center and scale the model
+                    const box = new THREE.Box3().setFromObject(currentModel);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    
+                    // Center the model
+                    currentModel.position.copy(center).multiplyScalar(-1);
+                    
+                    // Scale to fit in view
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 0) {
+                        const scale = 3 / maxDim;
+                        currentModel.scale.setScalar(scale);
+                    }
+
+                    // Enable shadows
+                    currentModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+
+                    scene.add(currentModel);
+                    
+                    // Position camera to view the model
+                    const distance = Math.max(size.x, size.y, size.z) * 2;
+                    camera.position.set(distance, distance * 0.5, distance);
+                    camera.lookAt(0, 0, 0);
+                    controls.target.set(0, 0, 0);
+                    controls.update();
+
+                    // Play animations if any
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        const mixer = new THREE.AnimationMixer(currentModel);
+                        gltf.animations.forEach((clip) => {
+                            mixer.clipAction(clip).play();
+                        });
+                        
+                        function animateModel() {
+                            requestAnimationFrame(animateModel);
+                            mixer.update(0.016); // ~60fps
+                        }
+                        animateModel();
+                    }
+
+                    loading.classList.add('hidden');
+                    controlsHint.classList.remove('hidden');
+                    URL.revokeObjectURL(url);
+
+                    // Notify parent that model loaded successfully
+                    window.parent.postMessage({ 
+                        type: 'MODEL_LOADED', 
+                        fileName: fileName,
+                        triangles: countTriangles(currentModel)
+                    }, '*');
+                },
+                (progress) => {
+                    // Loading progress
+                    const percent = (progress.loaded / progress.total) * 100;
+                    console.log('Loading progress:', percent + '%');
+                },
+                (error) => {
+                    console.error('Error loading model:', error);
+                    loading.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    URL.revokeObjectURL(url);
+
+                    // Notify parent of error
+                    window.parent.postMessage({ 
+                        type: 'MODEL_ERROR', 
+                        error: error.message || 'Failed to load model'
+                    }, '*');
+                }
+            );
+        }
+
+        function countTriangles(object) {
+            let triangles = 0;
+            object.traverse((child) => {
+                if (child.isMesh && child.geometry) {
+                    if (child.geometry.index) {
+                        triangles += child.geometry.index.count / 3;
+                    } else {
+                        triangles += child.geometry.attributes.position.count / 3;
+                    }
+                }
+            });
+            return Math.floor(triangles);
+        }
+
+        // Listen for messages from parent window
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'LOAD_MODEL') {
+                const { arrayBuffer, fileName } = event.data;
+                if (arrayBuffer && fileName) {
+                    loadModel(arrayBuffer, fileName);
+                }
+            }
+        });
+
+        // Initialize the viewer
+        init();
+
+        // Notify parent that viewer is ready
+        window.parent.postMessage({ type: 'VIEWER_READY' }, '*');
+    </script>
+</body>
+</html> 

@@ -20,6 +20,7 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
   const [estimatedTime, setEstimatedTime] = useState(0);
   const [activeTab, setActiveTab] = useState<'generate' | '3d-preview'>('generate');
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [templates] = useState([
@@ -249,29 +250,105 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
     </div>
   );
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      
+      // Create URLs for image preview
+      const imageUrls = newFiles
+        .filter(file => file.type.startsWith('image/'))
+        .map(file => URL.createObjectURL(file));
+      
+      setGeneratedImages(prev => [...prev, ...imageUrls]);
+    }
+  };
+
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setGeneratedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
   const render3DPreviewTab = () => (
     <div className="threed-tab-container">
       <div className="threed-tab-header">
         <h3>3D Scene Preview</h3>
         <p>Explore your generated content in an interactive 3D environment</p>
       </div>
+
+      {/* File Upload Section */}
+      <div className="upload-section">
+        <div className="upload-area">
+          <input
+            type="file"
+            id="file-upload"
+            multiple
+            accept="image/*,video/*,.gltf,.glb,.obj,.fbx"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+          <label htmlFor="file-upload" className="upload-label">
+            <div className="upload-content">
+              <div className="upload-icon">📁</div>
+              <h4>Upload 3D Assets</h4>
+              <p>Drop files here or click to browse</p>
+              <div className="supported-formats">
+                <span>Images</span> • <span>Videos</span> • <span>3D Models</span>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        {/* Uploaded Files List */}
+        {uploadedFiles.length > 0 && (
+          <div className="uploaded-files">
+            <h4>Uploaded Files ({uploadedFiles.length})</h4>
+            <div className="files-grid">
+              {uploadedFiles.map((file, index) => (
+                <div key={index} className="file-item">
+                  <div className="file-preview">
+                    {file.type.startsWith('image/') ? (
+                      <img 
+                        src={URL.createObjectURL(file)} 
+                        alt={file.name}
+                        className="file-thumbnail"
+                      />
+                    ) : (
+                      <div className="file-icon">
+                        {file.type.startsWith('video/') ? '🎬' : 
+                         file.name.endsWith('.gltf') || file.name.endsWith('.glb') ? '🎲' : '📄'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="file-info">
+                    <div className="file-name">{file.name}</div>
+                    <div className="file-size">{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                  </div>
+                  <button 
+                    className="remove-file-btn"
+                    onClick={() => removeUploadedFile(index)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <ThreeDPreview
         images={generatedImages}
         modelUrl={videoUrl || undefined}
         isVisible={true}
       />
-      {!videoUrl && generatedImages.length === 0 && (
+
+      {!videoUrl && generatedImages.length === 0 && uploadedFiles.length === 0 && (
         <div className="no-content-message">
-          <div className="no-content-icon">🎬</div>
+          <div className="no-content-icon">🎲</div>
           <h4>No 3D Content Available</h4>
-          <p>Generate a video first to view it in 3D</p>
-          <button 
-            className="back-to-generate-btn"
-            onClick={() => setActiveTab('generate')}
-          >
-            <span className="btn-icon">←</span>
-            Back to Generate
-          </button>
+          <p>Upload files above or generate a video to view in 3D</p>
         </div>
       )}
     </div>
@@ -306,15 +383,14 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
           <span className="tab-label">Generate</span>
           {videoUrl && <span className="tab-badge">✓</span>}
         </button>
-        <button 
-          className={`tab-btn ${activeTab === '3d-preview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('3d-preview')}
-          disabled={!videoUrl && generatedImages.length === 0}
-        >
-          <span className="tab-icon">🎭</span>
-          <span className="tab-label">3D Preview</span>
-          {generatedImages.length > 0 && <span className="tab-badge">{generatedImages.length}</span>}
-        </button>
+                 <button 
+           className={`tab-btn ${activeTab === '3d-preview' ? 'active' : ''}`}
+           onClick={() => setActiveTab('3d-preview')}
+         >
+           <span className="tab-icon">🎭</span>
+           <span className="tab-label">3D Preview</span>
+           {generatedImages.length > 0 && <span className="tab-badge">{generatedImages.length}</span>}
+         </button>
       </div>
 
       {/* Tab Content */}

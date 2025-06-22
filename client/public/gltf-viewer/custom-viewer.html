@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .viewer-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        .dropzone {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .viewer {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .upload-content {
+            text-align: center;
+            padding: 40px;
+            border: 2px dashed #555;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        
+        .upload-subtext {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #4338ca, #6d28d9);
+            transform: translateY(-1px);
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1001;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            border: 3px solid #333;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Hide the original three-gltf-viewer UI elements we don't need */
+        header {
+            display: none !important;
+        }
+        
+        .placeholder {
+            display: none !important;
+        }
+        
+        .upload-btn-original {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-container">
+        <!-- Three.js GLTF Viewer will be injected here -->
+        <div class="dropzone">
+            <div class="viewer"></div>
+        </div>
+        
+        <!-- Custom Upload Overlay -->
+        <div class="upload-overlay" id="uploadOverlay">
+            <div class="upload-content">
+                <div class="upload-icon">🎲</div>
+                <div class="upload-text">Drop your 3D model here</div>
+                <div class="upload-subtext">or click to browse</div>
+                <input type="file" id="fileInput" class="file-input" accept=".glb,.gltf" />
+                <label for="fileInput" class="upload-btn">Choose GLB/GLTF File</label>
+            </div>
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div class="loading hidden" id="loading">
+            <div class="spinner"></div>
+            <div>Loading 3D model...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from './assets/index-CUJcYfpt.js';
+        
+        // Simple file handling
+        const fileInput = document.getElementById('fileInput');
+        const uploadOverlay = document.getElementById('uploadOverlay');
+        const loading = document.getElementById('loading');
+        const dropzone = document.querySelector('.dropzone');
+        
+        let viewer = null;
+        
+        // Initialize a basic Three.js viewer
+        function initViewer() {
+            const container = document.querySelector('.viewer');
+            
+            // Scene setup
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+            
+            // Camera
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+            
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1;
+            container.appendChild(renderer.domElement);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            scene.add(directionalLight);
+            
+            // Controls (you'll need to include OrbitControls)
+            // For now, basic mouse interaction
+            let mouseX = 0, mouseY = 0;
+            let targetRotationX = 0, targetRotationY = 0;
+            
+            document.addEventListener('mousemove', (event) => {
+                if (event.buttons === 1) { // Left mouse button
+                    mouseX = (event.clientX - window.innerWidth / 2) * 0.01;
+                    mouseY = (event.clientY - window.innerHeight / 2) * 0.01;
+                    targetRotationX += mouseY * 0.1;
+                    targetRotationY += mouseX * 0.1;
+                }
+            });
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                if (scene.children.length > 2) { // More than just lights
+                    const model = scene.children.find(child => child.type === 'Group' || child.type === 'Mesh');
+                    if (model) {
+                        model.rotation.x = targetRotationX;
+                        model.rotation.y = targetRotationY;
+                    }
+                }
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            return { scene, camera, renderer };
+        }
+        
+        // Load GLTF model
+        function loadModel(file) {
+            loading.classList.remove('hidden');
+            uploadOverlay.classList.add('hidden');
+            
+            const loader = new THREE.GLTFLoader();
+            const url = URL.createObjectURL(file);
+            
+            loader.load(
+                url,
+                (gltf) => {
+                    // Clear previous model
+                    if (viewer) {
+                        const existingModel = viewer.scene.children.find(child => 
+                            child.type === 'Group' && child.userData.isModel
+                        );
+                        if (existingModel) {
+                            viewer.scene.remove(existingModel);
+                        }
+                    } else {
+                        viewer = initViewer();
+                    }
+                    
+                    const model = gltf.scene;
+                    model.userData.isModel = true;
+                    
+                    // Center and scale the model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    
+                    model.position.copy(center).multiplyScalar(-1);
+                    
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 2 / maxDim;
+                    model.scale.setScalar(scale);
+                    
+                    viewer.scene.add(model);
+                    
+                    loading.classList.add('hidden');
+                    URL.revokeObjectURL(url);
+                    
+                    // Notify parent window
+                    window.parent.postMessage({ type: 'MODEL_LOADED' }, '*');
+                },
+                (progress) => {
+                    console.log('Loading progress:', progress);
+                },
+                (error) => {
+                    console.error('Error loading model:', error);
+                    loading.classList.add('hidden');
+                    uploadOverlay.classList.remove('hidden');
+                    URL.revokeObjectURL(url);
+                    
+                    // Notify parent window
+                    window.parent.postMessage({ type: 'MODEL_ERROR', error: error.message }, '*');
+                }
+            );
+        }
+        
+        // File input handling
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                loadModel(file);
+            }
+        });
+        
+        // Drag and drop
+        dropzone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            uploadOverlay.style.background = 'rgba(0, 0, 0, 0.9)';
+        });
+        
+        dropzone.addEventListener('dragleave', (event) => {
+            event.preventDefault();
+            uploadOverlay.style.background = 'rgba(0, 0, 0, 0.8)';
+        });
+        
+        dropzone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            uploadOverlay.style.background = 'rgba(0, 0, 0, 0.8)';
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.toLowerCase().endsWith('.glb') || file.name.toLowerCase().endsWith('.gltf')) {
+                    loadModel(file);
+                }
+            }
+        });
+        
+        // Listen for messages from parent window
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'LOAD_MODEL' && event.data.file) {
+                loadModel(event.data.file);
+            }
+        });
+    </script>
+</body>
+</html> 
