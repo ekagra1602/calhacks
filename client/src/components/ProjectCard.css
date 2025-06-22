@@ -1,0 +1,357 @@
+.project-card {
+  background: linear-gradient(145deg, #0d0d0d, #000000);
+  border: 1px solid #1a1a1a;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  position: relative;
+  animation: cardSlideIn 0.6s ease-out;
+}
+
+.project-card:hover {
+  transform: translateY(-8px);
+  border-color: #2a2a2a;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.card-thumbnail {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.card-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.project-card:hover .card-thumbnail img {
+  transform: scale(1.05);
+}
+
+.placeholder-thumbnail {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(45deg, #1a1a1a, #0d0d0d);
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  opacity: 0.5;
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+.thumbnail-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.project-card:hover .thumbnail-overlay {
+  opacity: 1;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.overlay-btn {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #2a2a2a;
+  color: #888888;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.overlay-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: #3a3a3a;
+  transform: scale(1.1);
+}
+
+.play-btn:hover {
+  color: #44aa44;
+  border-color: #2a4a2a;
+}
+
+.edit-btn:hover {
+  color: #aa9944;
+  border-color: #4a3a2a;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid #2a2a2a;
+  align-self: flex-start;
+}
+
+.status-text {
+  color: #888888;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.project-card.completed .status-badge {
+  border-color: #2a4a2a;
+}
+
+.project-card.processing .status-badge {
+  border-color: #4a3a2a;
+}
+
+.project-card.failed .status-badge {
+  border-color: #4a2a2a;
+}
+
+.processing-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.progress-ring {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #1a1a1a;
+  border-radius: 50%;
+  position: relative;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.progress-fill {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 60px;
+  height: 60px;
+  border: 3px solid transparent;
+  border-top: 3px solid #444444;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.card-title {
+  color: #888888;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #666666;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.action-btn:hover {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+  color: #888888;
+  transform: scale(1.1);
+}
+
+.delete-btn:hover {
+  background: #2a0a0a;
+  border-color: #4a1a1a;
+  color: #aa4444;
+}
+
+.card-description {
+  color: #666666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #1a1a1a;
+  color: #666666;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #2a2a2a;
+  transition: all 0.3s ease;
+}
+
+.tag:hover {
+  background: #2a2a2a;
+  color: #888888;
+}
+
+.more-tags {
+  background: #2a2a2a;
+  color: #888888;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #1a1a1a;
+}
+
+.card-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #555555;
+  font-size: 0.8rem;
+}
+
+.meta-icon {
+  font-size: 0.8rem;
+}
+
+.card-type {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #1a1a1a;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+}
+
+.type-icon {
+  font-size: 0.9rem;
+}
+
+.type-text {
+  color: #666666;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .card-content {
+    padding: 1rem;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .card-actions {
+    align-self: flex-end;
+  }
+  
+  .card-meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+} 
