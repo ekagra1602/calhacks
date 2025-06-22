@@ -15,6 +15,8 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
   const [image, setImage] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [glbUrl, setGlbUrl] = useState<string | null>(null);
+  const [has3D, setHas3D] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState(0);
@@ -91,6 +93,17 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
       if (result.success) {
         setVideoUrl(result.videoUrl);
         setCurrentStep(5);
+        
+        // Handle 3D model if available
+        if (result.glbUrl) {
+          setGlbUrl(result.glbUrl);
+          setHas3D(true);
+          console.log('✅ GLB file received:', result.glbUrl);
+        } else {
+          setHas3D(false);
+          console.log('⚠️ No GLB file generated:', result.error3D || 'Unknown reason');
+        }
+        
         // Generate sample images for 3D preview (in real implementation, these would come from the API)
         setGeneratedImages([
           'https://picsum.photos/400/400?random=1',
@@ -182,8 +195,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
 
               {videoUrl && (
                 <button className="proceed-btn" onClick={handleProceedTo3D}>
-                  <span className="btn-icon">🚀</span>
-                  View in 3D
+                  <span className="btn-icon">{has3D ? '🎲' : '🚀'}</span>
+                  {has3D ? 'View 3D Model' : 'View in 3D'}
+                  {has3D && <span className="status-badge">✓</span>}
                 </button>
               )}
             </div>
@@ -360,8 +374,9 @@ const Workspace: React.FC<WorkspaceProps> = ({ onVideoGenerated }) => {
 
       <ThreeDPreview
         images={generatedImages}
-        modelUrl={videoUrl || undefined}
+        modelUrl={glbUrl || videoUrl || undefined}
         isVisible={true}
+        isGLB={!!glbUrl}
       />
 
       {!videoUrl && generatedImages.length === 0 && uploadedFiles.length === 0 && (

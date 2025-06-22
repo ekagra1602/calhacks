@@ -58,8 +58,25 @@ app.post('/api/generate-video', upload.single('image'), async (req, res) => {
     
     if (imageFile) {
       // Image-to-video generation
+      console.log('📷 Processing image:', {
+        filename: imageFile.originalname,
+        size: imageFile.size,
+        mimetype: imageFile.mimetype
+      });
+      
+      // Check image size (Veo 2 might have limits)
+      if (imageFile.size > 10 * 1024 * 1024) { // 10MB limit
+        fs.unlinkSync(imageFile.path);
+        return res.status(400).json({
+          error: 'Image too large',
+          message: 'Please use an image smaller than 10MB'
+        });
+      }
+      
       const imageBuffer = fs.readFileSync(imageFile.path);
       const imageBase64 = imageBuffer.toString('base64');
+      
+      console.log('📷 Image converted to base64, length:', imageBase64.length);
       
       operation = await ai.models.generateVideos({
         model: "veo-2.0-generate-001",
@@ -125,13 +142,65 @@ app.post('/api/generate-video', upload.single('image'), async (req, res) => {
     
     if (videoUri) {
       console.log('🎥 Video URI found:', videoUri);
-      res.json({
-        success: true,
-        videoUrl: `${videoUri}&key=${process.env.GEMINI_API_KEY}`,
-        message: imageFile ? 
-          'Video generated from image + text!' : 
-          'Video generated from text!'
-      });
+      const fullVideoUrl = `${videoUri}&key=${process.env.GEMINI_API_KEY}`;
+      
+      // Send video to Gradio server for 3D conversion
+      console.log('🔄 Sending video to Gradio server for 3D conversion...');
+      
+      try {
+        const gradioResponse = await fetch('https://e887ddc6057cfd219d.gradio.live/api/predict', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            data: [fullVideoUrl],
+            fn_index: 0 // Assuming the video-to-3D function is at index 0
+          })
+        });
+        
+        const gradioResult = await gradioResponse.json();
+        console.log('🎯 Gradio response:', gradioResult);
+        
+        if (gradioResult.data && gradioResult.data[0]) {
+          const glbUrl = gradioResult.data[0];
+          console.log('✅ GLB file generated:', glbUrl);
+          
+          res.json({
+            success: true,
+            videoUrl: fullVideoUrl,
+            glbUrl: glbUrl,
+            message: imageFile ? 
+              'Video generated and converted to 3D model!' : 
+              'Video generated and converted to 3D model!',
+            has3D: true
+          });
+        } else {
+          // Video generated but 3D conversion failed
+          res.json({
+            success: true,
+            videoUrl: fullVideoUrl,
+            message: imageFile ? 
+              'Video generated! (3D conversion temporarily unavailable)' : 
+              'Video generated! (3D conversion temporarily unavailable)',
+            has3D: false,
+            error3D: 'Gradio server did not return a valid GLB file'
+          });
+        }
+      } catch (gradioError) {
+        console.error('❌ Gradio conversion failed:', gradioError);
+        
+        // Still return the video even if 3D conversion fails
+        res.json({
+          success: true,
+          videoUrl: fullVideoUrl,
+          message: imageFile ? 
+            'Video generated! (3D conversion temporarily unavailable)' : 
+            'Video generated! (3D conversion temporarily unavailable)',
+          has3D: false,
+          error3D: gradioError.message
+        });
+      }
     } else {
       console.error('❌ No video URI found in response');
       console.error('Available response keys:', Object.keys(operation.response || {}));
@@ -146,6 +215,84 @@ app.post('/api/generate-video', upload.single('image'), async (req, res) => {
   } catch (error) {
     console.error('Veo 2 API Error:', error);
     
+    // If this was an image-to-video request that failed due to overload, try text-only as fallback
+    if (imageFile && (error.message?.includes('overloaded') || error.message?.includes('UNAVAILABLE'))) {
+      console.log('🔄 Image-to-video failed due to server overload, trying text-only generation as fallback...');
+      
+      try {
+        const fallbackOperation = await ai.models.generateVideos({
+          model: "veo-2.0-generate-001",
+          prompt: `${prompt} (Originally requested with image but using text-only due to server capacity)`,
+          config: {
+            personGeneration: "dont_allow",
+            aspectRatio: "16:9",
+          },
+        });
+        
+        // Poll for completion
+        let pollCount = 0;
+        const maxPolls = 20;
+        
+        while (!fallbackOperation.done && pollCount < maxPolls) {
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          fallbackOperation = await ai.operations.getVideosOperation({ operation: fallbackOperation });
+          pollCount++;
+          console.log(`Fallback polling attempt ${pollCount}, status: ${fallbackOperation.done ? 'done' : 'pending'}`);
+        }
+        
+        if (fallbackOperation.done) {
+          let videoUri = null;
+          
+          if (fallbackOperation.response?.generatedVideos?.[0]?.video?.uri) {
+            videoUri = fallbackOperation.response.generatedVideos[0].video.uri;
+          }
+          
+          if (videoUri) {
+            const fullVideoUrl = `${videoUri}&key=${process.env.GEMINI_API_KEY}`;
+            
+            // Try 3D conversion for fallback video too
+            try {
+              const gradioResponse = await fetch('https://e887ddc6057cfd219d.gradio.live/api/predict', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  data: [fullVideoUrl],
+                  fn_index: 0
+                })
+              });
+              
+              const gradioResult = await gradioResponse.json();
+              
+              if (gradioResult.data && gradioResult.data[0]) {
+                return res.json({
+                  success: true,
+                  videoUrl: fullVideoUrl,
+                  glbUrl: gradioResult.data[0],
+                  message: 'Video generated from text only and converted to 3D (image-to-video temporarily unavailable)',
+                  fallback: true,
+                  has3D: true
+                });
+              }
+            } catch (gradioError) {
+              console.error('❌ Gradio conversion failed for fallback video:', gradioError);
+            }
+            
+            return res.json({
+              success: true,
+              videoUrl: fullVideoUrl,
+              message: 'Video generated from text only (image-to-video temporarily unavailable)',
+              fallback: true,
+              has3D: false
+            });
+          }
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback text-only generation also failed:', fallbackError);
+      }
+    }
+    
     // Clean up image if it exists
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
@@ -154,7 +301,8 @@ app.post('/api/generate-video', upload.single('image'), async (req, res) => {
     res.status(500).json({
       error: 'Failed to generate video',
       message: error.message,
-      details: error.response?.data || 'Unknown error'
+      details: error.response?.data || 'Unknown error',
+      suggestion: imageFile ? 'Try generating without an image (text-only) as image-to-video may be experiencing high demand' : null
     });
   }
 });

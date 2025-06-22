@@ -25,13 +25,15 @@ interface ThreeDPreviewProps {
   modelUrl?: string;
   isVisible?: boolean;
   uploadedFiles?: File[];
+  isGLB?: boolean;
 }
 
 const ThreeDPreview: React.FC<ThreeDPreviewProps> = ({ 
   images = [], 
   modelUrl, 
   isVisible = true,
-  uploadedFiles = []
+  uploadedFiles = [],
+  isGLB = false
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
@@ -113,6 +115,40 @@ const ThreeDPreview: React.FC<ThreeDPreviewProps> = ({
       }
     }
   }, [uploadedFiles, viewerReady]);
+
+  // Handle GLB URL from server
+  useEffect(() => {
+    if (!modelUrl || !isGLB || !viewerReady) return;
+
+    const loadGLBFromUrl = async () => {
+      setIsLoading(true);
+      setError(null);
+      setHasModel(false);
+
+      try {
+        console.log('🎲 Loading GLB from URL:', modelUrl);
+        
+        // Fetch the GLB file
+        const response = await fetch(modelUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch GLB: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        const file = new File([blob], 'generated_model.glb', { type: 'model/gltf-binary' });
+        
+        // Load using existing method
+        await loadModelInViewer(file);
+        
+      } catch (err) {
+        console.error('❌ Error loading GLB from URL:', err);
+        setError('Failed to load 3D model from server: ' + (err as Error).message);
+        setIsLoading(false);
+      }
+    };
+
+    loadGLBFromUrl();
+  }, [modelUrl, isGLB, viewerReady]);
 
   const loadModelInViewer = async (file: File) => {
     if (!viewerRef.current || !viewerReady) {
