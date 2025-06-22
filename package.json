@@ -1,0 +1,19 @@
+{
+  "name": "epicvideo3d",
+  "version": "1.0.0",
+  "description": "React web app for generating 3D videos using Veo 3 API",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start"
+  },
+  "keywords": ["react", "veo3", "video", "3d"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 

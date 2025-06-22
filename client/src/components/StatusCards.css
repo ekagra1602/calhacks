@@ -1,0 +1,233 @@
+.status-cards {
+  background: linear-gradient(145deg, #0a0a0a, #000000);
+  border: 1px solid #1a1a1a;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  animation: slideInUp 0.8s ease-out;
+}
+
+.cards-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.cards-header h3 {
+  color: #666666;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.pulse-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #444444;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #333333;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-card {
+  background: linear-gradient(145deg, var(--card-color), #000000);
+  border: 1px solid #1a1a1a;
+  border-radius: 16px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  animation: cardAppear 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.status-card:hover {
+  transform: translateY(-5px);
+  border-color: #2a2a2a;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-icon {
+  font-size: 1.5rem;
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+.card-trend {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #888888;
+  margin-bottom: 0.25rem;
+  animation: valueCounter 1s ease-out;
+}
+
+.card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555555;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-subtitle {
+  font-size: 0.8rem;
+  color: #444444;
+  font-weight: 400;
+}
+
+.card-background-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.01), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.status-card:hover .card-background-effect {
+  opacity: 1;
+}
+
+.generating-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #333333, transparent);
+  border-radius: 2px;
+}
+
+.wave1 {
+  animation: wave 2s ease-in-out infinite;
+}
+
+.wave2 {
+  animation: wave 2s ease-in-out infinite 0.3s;
+  opacity: 0.7;
+}
+
+.wave3 {
+  animation: wave 2s ease-in-out infinite 0.6s;
+  opacity: 0.4;
+}
+
+.cards-footer {
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid #1a1a1a;
+}
+
+.last-updated {
+  font-size: 0.8rem;
+  color: #444444;
+  font-weight: 400;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes cardAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(5deg); }
+}
+
+@keyframes valueCounter {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes wave {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .status-cards {
+    padding: 1.5rem;
+  }
+  
+  .cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .status-card {
+    padding: 1rem;
+  }
+  
+  .card-value {
+    font-size: 1.5rem;
+  }
+  
+  .cards-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+} 

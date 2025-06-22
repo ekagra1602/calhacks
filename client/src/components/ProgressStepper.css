@@ -1,0 +1,255 @@
+.progress-stepper {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stepper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.stepper-header h3 {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.step-counter {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.step-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  opacity: 0.5;
+}
+
+.step.active {
+  opacity: 1;
+}
+
+.step.current {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.step.completed {
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+.step-indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.step.active .step-indicator {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.step.current .step-indicator {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffffff;
+}
+
+.step.completed .step-indicator {
+  background: #4ade80;
+  border-color: #4ade80;
+  color: #000;
+}
+
+.step-icon {
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.step.current .step-icon {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.loading-ring {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border: 2px solid transparent;
+  border-top: 2px solid #4ade80;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.25rem;
+}
+
+.step-description {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.step.current .step-title {
+  color: #ffffff;
+}
+
+.step.completed .step-title {
+  color: #4ade80;
+}
+
+.step-connector {
+  width: 30px;
+  height: 2px;
+  margin: 0 0.5rem;
+  position: relative;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 1px;
+}
+
+.connector-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 1px;
+}
+
+.connector-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #4ade80;
+  border-radius: 1px;
+  width: 0;
+  transition: width 0.5s ease;
+}
+
+.step-connector.completed .connector-progress {
+  width: 100%;
+}
+
+.progress-bar-container {
+  margin-top: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@media (max-width: 768px) {
+  .progress-stepper {
+    padding: 1rem;
+  }
+  
+  .stepper-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .step {
+    padding: 0.5rem;
+  }
+  
+  .step-indicator {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .step-icon {
+    font-size: 1rem;
+  }
+  
+  .step-connector {
+    width: 20px;
+  }
+} 
