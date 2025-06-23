@@ -15,7 +15,7 @@ A React web application for generating cinematic videos using the Veo 3 API and 
 ## Project Structure
 
 ```
-epicvideo3d/
+liv-it/
 ├── client/                 # React frontend
 │   ├── public/
 │   ├── src/
