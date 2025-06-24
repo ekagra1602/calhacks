@@ -173,4 +173,8 @@ npm run client
 
 ## License
 
+# IMPORTANT NOTES
+
+Make sure you run gh repo clone donmccurdy/three-gltf-viewer in the root node. We used this open source project for our basic preview 
+
 MIT License
